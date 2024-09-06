@@ -1,2 +1,6 @@
 /vrtl_env
-_pycache_
+.env
+*.log
+*.pot
+*.pyc
+__pycache__/
