@@ -2,12 +2,12 @@
 
 from django.db import migrations, models
 
+
 class Migration(migrations.Migration):
 
     initial = True
 
     dependencies = [
-        ('traders', '0001_initial'),  # Ensure this matches the migration file for the Trader model
     ]
 
     operations = [
@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name='TextileBale',
             fields=[
                 ('bale_id', models.AutoField(primary_key=True, serialize=False)),
-                ('trader', models.ForeignKey(on_delete=models.CASCADE, to='traders.Trader')),
+                ('trader_id', models.IntegerField()),
                 ('waste_type', models.CharField(max_length=100)),
                 ('location', models.CharField(max_length=255)),
                 ('weight', models.IntegerField()),
