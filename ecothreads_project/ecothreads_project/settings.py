@@ -43,9 +43,12 @@ INSTALLED_APPS = [
     'authentication',
     'corsheaders',
     'rest_framework',
-    'products',
-    'users',
     'api',  
+    'users',
+    'products',
+    'order',
+    'textilebale',
+    'traders',
 ]
 
 MIDDLEWARE = [
@@ -86,7 +89,7 @@ WSGI_APPLICATION = 'ecothreads_project.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "ecothreads",
+        "NAME": "ecothreadsdb",
         "USER": "postgres",
         "PASSWORD": "ecothreads",
         "HOST": "127.0.0.1",

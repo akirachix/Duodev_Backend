@@ -30,6 +30,9 @@ class ProductsListView(APIView):
     def get(self, request):
         """
         Returns a list of all products.
+        
+        :param request: Request object
+        :return: Response object with list of products
         """
         products = Products.objects.all()
         serializer = ProductsSerializer(products, many=True)
@@ -38,6 +41,9 @@ class ProductsListView(APIView):
     def post(self, request):
         """
         Creates a new product.
+        
+        :param request: Request object with product data
+        :return: Response object with created product data
         """
         serializer = ProductsSerializer(data=request.data)
         if serializer.is_valid():
@@ -53,6 +59,10 @@ class ProductsDetailView(APIView):
     def get(self, request, pk):
         """
         Returns a product by id.
+        
+        :param request: Request object
+        :param pk: Product id
+        :return: Response object with product data
         """
         try:
             product = Products.objects.get(pk=pk)
@@ -64,6 +74,10 @@ class ProductsDetailView(APIView):
     def put(self, request, pk):
         """
         Updates a product by id.
+        
+        :param request: Request object with product data
+        :param pk: Product id
+        :return: Response object with updated product data
         """
         try:
             product = Products.objects.get(pk=pk)
@@ -78,6 +92,10 @@ class ProductsDetailView(APIView):
     def delete(self, request, pk):
         """
         Deletes a product by id.
+        
+        :param request: Request object
+        :param pk: Product id
+        :return: Response object with status code
         """
         try:
             product = Products.objects.get(pk=pk)
@@ -94,6 +112,9 @@ class UserRegistrationView(APIView):
     def post(self, request):
         """
         Creates a new user.
+        
+        :param request: Request object with user data
+        :return: Response object with created user data
         """
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
