@@ -1,14 +1,21 @@
-from django.http import Http404
+from django.http import JsonResponse
+from django.utils.dateparse import parse_date
 from rest_framework import status
 from rest_framework.views import APIView
+from .serializers import (
+    ProductsSerializer, UserSerializer, TextileBaleSerializer,
+    SalesReportSerializer, ProductSalesReportSerializer,
+    OrderStatusReportSerializer, CustomerActivityReportSerializer,
+    OrderSerializer
+)
 from rest_framework.response import Response
-from products.models import Products
-from .serializers import ProductsSerializer, UserSerializer, TextileBaleSerializer
-from order.models import Order
-from .serializers import OrderSerializer
-from django.contrib.auth.models import User
+from django.http import Http404
 from rest_framework.permissions import IsAuthenticated
+from products.models import Products
+from order.models import Order
+from django.contrib.auth.models import User
 from textilebale.models import TextileBale
+from django.db.models import Sum, Count
 
 # Products Views
 class ProductsListView(APIView):
@@ -21,7 +28,8 @@ class ProductsListView(APIView):
         """
         products = Products.objects.all()
         serializer = ProductsSerializer(products, many=True)
-        return Response(serializer.data)
+        return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
+
 
     def post(self, request):
         """
@@ -30,8 +38,8 @@ class ProductsListView(APIView):
         serializer = ProductsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'data': serializer.data}, status=status.HTTP_201_CREATED)
+        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProductsDetailView(APIView):
@@ -45,9 +53,9 @@ class ProductsDetailView(APIView):
         try:
             product = Products.objects.get(pk=pk)
         except Products.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'errors': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = ProductsSerializer(product)
-        return Response(serializer.data)
+        return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
         """
@@ -56,12 +64,12 @@ class ProductsDetailView(APIView):
         try:
             product = Products.objects.get(pk=pk)
         except Products.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'errors': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = ProductsSerializer(product, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
+        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         """
@@ -70,9 +78,9 @@ class ProductsDetailView(APIView):
         try:
             product = Products.objects.get(pk=pk)
         except Products.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'errors': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
         product.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({'message': 'Product deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 
 # User Registration View
@@ -87,10 +95,9 @@ class UserRegistrationView(APIView):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+            return JsonResponse({'data': serializer.data}, status=status.HTTP_201_CREATED)
+        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
 # Order Views
 class OrderListCreateAPIView(APIView):
     """
@@ -102,7 +109,7 @@ class OrderListCreateAPIView(APIView):
         """
         orders = Order.objects.all()
         serializer = OrderSerializer(orders, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         """
@@ -111,9 +118,8 @@ class OrderListCreateAPIView(APIView):
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            return JsonResponse({'data': serializer.data}, status=status.HTTP_201_CREATED)
+        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class OrderDetailAPIView(APIView):
     """
@@ -131,7 +137,8 @@ class OrderDetailAPIView(APIView):
         """
         order = self.get_object(order_id)
         serializer = OrderSerializer(order)
-        return Response(serializer.data)
+        return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
+
 
     def put(self, request, order_id):
         """
@@ -141,8 +148,9 @@ class OrderDetailAPIView(APIView):
         serializer = OrderSerializer(order, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
+        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
     def delete(self, request, order_id):
         """
@@ -150,8 +158,7 @@ class OrderDetailAPIView(APIView):
         """
         order = self.get_object(order_id)
         order.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+        return JsonResponse({'message': 'Order deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 class CartCheckoutAPIView(APIView):
     """
@@ -167,8 +174,7 @@ class CartCheckoutAPIView(APIView):
         user = request.user  # Assuming user is authenticated
 
         if not cart_data:
-            return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
-
+            return JsonResponse({'errors': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
         order_data = {
             'user': user.id,
             'status': 'Pending',
@@ -184,13 +190,9 @@ class CartCheckoutAPIView(APIView):
                 # Create OrderItem or similar model here
                 pass
 
-            # Notify the recycling company (optional)
-            # Implement notification logic if needed
+            return JsonResponse({'message': 'Order placed successfully', 'order_id': order.id}, status=status.HTTP_201_CREATED)
 
-            return Response({"message": "Order placed successfully", "order_id": order.id}, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 # Textile Bale Views
 class TextileBaleListCreateAPIView(APIView):
@@ -203,7 +205,7 @@ class TextileBaleListCreateAPIView(APIView):
         """
         bales = TextileBale.objects.all()
         serializer = TextileBaleSerializer(bales, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         """
@@ -212,9 +214,8 @@ class TextileBaleListCreateAPIView(APIView):
         serializer = TextileBaleSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            return JsonResponse({'data': serializer.data}, status=status.HTTP_201_CREATED)
+        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class TextileBaleDetailAPIView(APIView):
     """
@@ -232,7 +233,8 @@ class TextileBaleDetailAPIView(APIView):
         """
         bale = self.get_object(bale_id)
         serializer = TextileBaleSerializer(bale)
-        return Response(serializer.data)
+        return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
+
 
     def put(self, request, bale_id):
         """
@@ -242,8 +244,8 @@ class TextileBaleDetailAPIView(APIView):
         serializer = TextileBaleSerializer(bale, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
+        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, bale_id):
         """
@@ -251,4 +253,118 @@ class TextileBaleDetailAPIView(APIView):
         """
         bale = self.get_object(bale_id)
         bale.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({'message': 'Textile bale deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
+# Sales Report Views
+class SalesReportAPIView(APIView):
+    def get(self, request):
+        serializer = SalesReportSerializer(data=request.query_params)
+        if serializer.is_valid():
+            data = self.generate_sales_report(serializer.validated_data)
+            return JsonResponse(data)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        serializer = SalesReportSerializer(data=request.data)
+        if serializer.is_valid():
+            data = self.generate_sales_report(serializer.validated_data)
+            return JsonResponse(data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def generate_sales_report(self, data):
+        start_date = parse_date(data.get('start_date'))
+        end_date = parse_date(data.get('end_date'))
+        report_type = data.get('report_type')
+
+        # Fetching sales data
+        sales_data = Order.objects.filter(date__range=[start_date, end_date])
+
+        if report_type == 'daily':
+            report = sales_data.values('date').annotate(total_sales=Sum('total_price'))
+        elif report_type == 'weekly':
+            report = sales_data.extra({'week': "strftime('%Y-%W', date)"}).values('week').annotate(total_sales=Sum('total_price'))
+        elif report_type == 'monthly':
+            report = sales_data.extra({'month': "strftime('%Y-%m', date)"}).values('month').annotate(total_sales=Sum('total_price'))
+        else:
+            report = {'error': 'Invalid report type'}
+
+        return list(report)
+
+# Product Report Views
+class ProductSalesReportAPIView(APIView):
+    def get(self, request):
+        serializer = ProductSalesReportSerializer(data=request.query_params)
+        if serializer.is_valid():
+            data = self.generate_product_sales_report(serializer.validated_data)
+            return JsonResponse(data)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        serializer = ProductSalesReportSerializer(data=request.data)
+        if serializer.is_valid():
+            data = self.generate_product_sales_report(serializer.validated_data)
+            return JsonResponse(data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def generate_product_sales_report(self, data):
+        category = data.get('category')
+        stock = data.get('stock')
+        popularity = data.get('popularity')
+
+        products = Products.objects.all()
+        if category:
+            products = products.filter(category=category)
+        if stock:
+            products = products.filter(stock__gte=stock)
+        if popularity:
+            products = products.order_by('-popularity')
+
+        report = products.values('name').annotate(total_sales=Sum('order__total_price'))
+        return list(report)
+
+
+# customer activity report
+class CustomerActivityReportAPIView(APIView):
+    def get(self, request):
+        serializer = CustomerActivityReportSerializer(data=request.query_params)
+        if serializer.is_valid():
+            data = self.generate_customer_activity_report(serializer.validated_data)
+            return JsonResponse(data)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def generate_customer_activity_report(self, data):
+        start_date = parse_date(data.get('start_date'))
+        end_date = parse_date(data.get('end_date'))
+
+        users = User.objects.filter(date_joined__range=[start_date, end_date])
+        report = users.annotate(num_orders=Count('order')).values('username', 'num_orders')
+        return list(report)
+    
+        
+# Order Report Views   
+class OrderStatusReportAPIView(APIView):
+    def get(self, request):
+        serializer = OrderStatusReportSerializer(data=request.query_params)
+        if serializer.is_valid():
+            data = self.generate_order_status_report(serializer.validated_data)
+            return JsonResponse(data)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        serializer = OrderStatusReportSerializer(data=request.data)
+        if serializer.is_valid():
+            data = self.generate_order_status_report(serializer.validated_data)
+            return JsonResponse(data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def generate_order_status_report(self, data):
+        status_filter = data.get('status')
+        start_date = parse_date(data.get('start_date'))
+        end_date = parse_date(data.get('end_date'))
+
+        orders = Order.objects.filter(date__range=[start_date, end_date])
+        if status_filter:
+            orders = orders.filter(status=status_filter)
+
+        report = orders.values('status').annotate(total_orders=Sum('total_price'))
+        return list(report) 

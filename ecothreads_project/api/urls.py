@@ -1,8 +1,12 @@
 from django.urls import path
-from .views import ProductsListView, ProductsDetailView, UserRegistrationView
-from api.views import OrderListCreateAPIView, OrderDetailAPIView, CartCheckoutAPIView
-from api.views import TextileBaleListCreateAPIView, TextileBaleDetailAPIView
-
+from .views import (
+    ProductsListView, ProductsDetailView,
+    UserRegistrationView,
+    OrderListCreateAPIView, OrderDetailAPIView, CartCheckoutAPIView,
+    TextileBaleListCreateAPIView, TextileBaleDetailAPIView,
+    SalesReportAPIView, ProductSalesReportAPIView,
+    OrderStatusReportAPIView, CustomerActivityReportAPIView
+)
 urlpatterns = [
     # Products URLs
     path('products/', ProductsListView.as_view(), name='product_list'),
@@ -21,4 +25,10 @@ urlpatterns = [
     # Textile Bale URLs
     path('textilebales/', TextileBaleListCreateAPIView.as_view(), name='textilebale-list-create'),
     path('textilebales/<int:bale_id>/', TextileBaleDetailAPIView.as_view(), name='textilebale-detail'),
+    
+    # Reporting URLs
+    path('reports/sales/', SalesReportAPIView.as_view(), name='sales-report'),
+    path('reports/product-sales/', ProductSalesReportAPIView.as_view(), name='product-sales-report'),
+    path('reports/order-status/', OrderStatusReportAPIView.as_view(), name='order-status-report'),
+    path('reports/customer-activity/', CustomerActivityReportAPIView.as_view(), name='customer-activity-report'),
 ]

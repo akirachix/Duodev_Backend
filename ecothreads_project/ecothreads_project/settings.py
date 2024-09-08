@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'order',
     'textilebale',
     'traders',
+    'reports',
 ]
 
 MIDDLEWARE = [
