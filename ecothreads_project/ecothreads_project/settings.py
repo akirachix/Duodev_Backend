@@ -43,6 +43,9 @@ INSTALLED_APPS = [
     'authentication',
     'rest_framework',
     'products',
+    'textilebale',
+    'order',
+    'footagent',
    
 ]
 
