@@ -1,4 +1,5 @@
 from django.db import models
+from traders.models import Trader
 
 class TextileBale(models.Model):
     bale_id = models.AutoField(primary_key=True)
