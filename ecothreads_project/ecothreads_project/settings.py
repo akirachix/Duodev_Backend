@@ -60,10 +60,7 @@ INSTALLED_APPS = [
     'payments',
     'reports',
 ]
-MPESA_CONSUMER_KEY = 'CHodcKLyb0fMN0eaXNGjokGFv91jxuERGJ58NgLl5hCGzmCq'
-MPESA_CONSUMER_SECRET = 'fa9VsnA7a3fAfvtYnRCB8AtKwxx0hbUPKyGwDZ2eRAGC4GhRIRuZbLtERKikmLAi'
-MPESA_SHORTCODE = '174379'
-MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
