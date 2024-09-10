@@ -9,10 +9,11 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
 from pathlib import Path
 import os
 from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,13 +24,20 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, "My App", "templates")
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*==1fc91gleh*18&0jzgfsl#p((u4(veem2g%t8@boy)2t6)p$'
+SECRET_KEY = os.getenv('SECRET_KEY')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
+
 ALLOWED_HOSTS = []
 
+MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')
+MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET')
+MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE')
+MPESA_PASSKEY = os.getenv('MPESA_PASSKEY')
 
 # Application definition
 
@@ -49,8 +57,13 @@ INSTALLED_APPS = [
     'order',
     'textilebale',
     'traders',
+    'payments',
     'reports',
 ]
+MPESA_CONSUMER_KEY = 'CHodcKLyb0fMN0eaXNGjokGFv91jxuERGJ58NgLl5hCGzmCq'
+MPESA_CONSUMER_SECRET = 'fa9VsnA7a3fAfvtYnRCB8AtKwxx0hbUPKyGwDZ2eRAGC4GhRIRuZbLtERKikmLAi'
+MPESA_SHORTCODE = '174379'
+MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -90,11 +103,11 @@ WSGI_APPLICATION = 'ecothreads_project.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "ecothreadsdb",
-        "USER": "postgres",
-        "PASSWORD": "ecothreads",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "NAME": os.getenv('DB_NAME'),
+        "USER": os.getenv('DB_USER'),
+        "PASSWORD": os.getenv('DB_PASSWORD'),
+        "HOST": os.getenv('DB_HOST'),
+        "PORT": os.getenv('DB_PORT'),
     }
 }
 
