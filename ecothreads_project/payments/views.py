@@ -9,7 +9,7 @@ import logging
 from payments.models import Payment
 from payments.utils import query_mpesa_payment_status
 from users.models import User
-
+mpesa_token = settings.MPESA_ACCESS_TOKEN_LINK
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ def process_payment(request):
             data = json.loads(request.body)
             phone_number = data.get('phone_number')
             amount = data.get('amount')
-            user_id = data.get('user_id')  # Get the user ID from the request
+            user_id = data.get('user_id') 
 
             if not phone_number or not amount or not user_id:
                 return JsonResponse({'error': 'Phone number, amount, and user ID are required'}, status=400)
@@ -35,6 +35,7 @@ def process_payment(request):
             passkey = settings.MPESA_PASSKEY
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
             password = base64.b64encode(f'{shortcode}{passkey}{timestamp}'.encode()).decode('utf-8')
+            mpesa_link = settings.MPESA_LINK
 
             payload = {
                 "BusinessShortCode": shortcode,
@@ -60,7 +61,7 @@ def process_payment(request):
             )
 
             response = requests.post(
-                'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
+                mpesa_link,
                 json=payload,
                 headers={
                     'Authorization': f'Bearer {get_access_token()}',
@@ -124,7 +125,7 @@ def mpesa_callback(request):
 
 
 def get_access_token():
-    api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+    api_url = mpesa_token
     headers = {
         'Authorization': f'Basic {base64.b64encode(f"{settings.MPESA_CONSUMER_KEY}:{settings.MPESA_CONSUMER_SECRET}".encode()).decode()}'
     }
