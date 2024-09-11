@@ -169,7 +169,7 @@ def send_invite_email(recipient, subject, html_content, text_content):
     """
     Utility function to send an email invitation.
     """
-    email = EmailMultiAlternatives(subject, text_content, 'yourname@gmail.com', [recipient])
+    email = EmailMultiAlternatives(subject, text_content, 'ecothreadshub2024@gmail.com', [recipient])
     email.attach_alternative(html_content, "text/html")
     email.send()
 
