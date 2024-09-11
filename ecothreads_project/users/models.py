@@ -1,39 +1,69 @@
+# users/models.py
+from django.conf import settings
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
-# Define choices for the role field
-# The choices are tuples containing the value to be stored in the database
-# and the human-readable name for that value
+# Define user roles
 ROLES = [
-    ('admin', 'Admin'),
     ('seller', 'Seller'),
     ('recycler', 'Recycler'),
     ('public', 'Public User'),
 ]
 
-class User(models.Model):
-    # The primary key for the user model, an auto-incrementing integer
+class UserManager(BaseUserManager):
+    """Custom manager to handle user creation."""
+    
+    def create_user(self, username, password=None, **extra_fields):
+        if not username:
+            raise ValueError('The Username field must be set')
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(username, password, **extra_fields)
+
+class User(AbstractBaseUser, PermissionsMixin):
+    """Custom User model that uses 'username' as the unique identifier."""
+    
     user_id = models.AutoField(primary_key=True)
-    # The username for the user, a unique string up to 150 characters
-    username = models.CharField(max_length=150, unique=True)
-    # The first name of the user, a string up to 30 characters
+    username = models.CharField(max_length=100, unique=True)  # Authentication field
     first_name = models.CharField(max_length=30)
-    # The last name of the user, a string up to 30 characters
     last_name = models.CharField(max_length=30)
-    # The email address of the user, a unique string
-    email = models.EmailField(unique=True)
-    # The password for the user, a string up to 128 characters
-    # Note: passwords should never be stored as plain text in a real application
-    # This is just for demonstration purposes
-    password = models.CharField(max_length=128)  
-    # The phone number of the user, a string up to 15 characters
-    # This field is optional
     phone_number = models.CharField(max_length=15, blank=True, null=True)
-    # The date the user registered, automatically set to the current date
     registration_date = models.DateField(auto_now_add=True)
-    # The role of the user, one of the choices defined in ROLES
-    role = models.CharField(max_length=50, choices=ROLES)
+    role = models.CharField(max_length=10, choices=ROLES, default='public')
+    
+    # Control user status
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'phone_number']
+
+    objects = UserManager()
 
     def __str__(self):
-        # Return the username as the string representation of the user
         return self.username
 
+    def has_perm(self, perm, obj=None):
+        """Check if user has a specific permission."""
+        if self.role == 'public' and perm in ['post_textilebale']:
+            return False
+        if self.role == 'seller' and perm in ['buy_textilebale']:
+            return False
+        return super().has_perm(perm, obj)
+
+    def has_module_perms(self, app_label):
+        """Check if user has permissions to view the app 'app_label'."""
+        return self.is_superuser
+
+    class Meta:
+        permissions = [
+            ("post_textilebale_custom", "Can post textile bale"),
+            ("buy_textilebale", "Can buy textile bale"),
+            ("view_textilebale_custom", "Can view textile bale"),
+        ]

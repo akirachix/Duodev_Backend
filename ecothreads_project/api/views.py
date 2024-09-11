@@ -1,21 +1,21 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.utils.dateparse import parse_date
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django.db.models import Sum, Count
+
 from .serializers import (
     ProductsSerializer, UserSerializer, TextileBaleSerializer,
     SalesReportSerializer, ProductSalesReportSerializer,
     OrderStatusReportSerializer, CustomerActivityReportSerializer,
     OrderSerializer
 )
-from rest_framework.response import Response
-from django.http import Http404
-from rest_framework.permissions import IsAuthenticated
 from products.models import Products
 from order.models import Order
 from django.contrib.auth.models import User
 from textilebale.models import TextileBale
-from django.db.models import Sum, Count
 
 # Products Views
 class ProductsListView(APIView):
@@ -30,7 +30,6 @@ class ProductsListView(APIView):
         serializer = ProductsSerializer(products, many=True)
         return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
 
-
     def post(self, request):
         """
         Creates a new product.
@@ -44,7 +43,7 @@ class ProductsListView(APIView):
 
 class ProductsDetailView(APIView):
     """
-    API view for retrieving, updating and deleting products.
+    API view for retrieving, updating, and deleting products.
     """
     def get(self, request, pk):
         """
@@ -97,33 +96,25 @@ class UserRegistrationView(APIView):
             serializer.save()
             return JsonResponse({'data': serializer.data}, status=status.HTTP_201_CREATED)
         return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 # Order Views
 class OrderListCreateAPIView(APIView):
-    """
-    API view for listing and creating orders.
-    """
     def get(self, request):
-        """
-        Returns a list of all orders.
-        """
         orders = Order.objects.all()
         serializer = OrderSerializer(orders, many=True)
-        return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
+        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
-        """
-        Creates a new order.
-        """
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse({'data': serializer.data}, status=status.HTTP_201_CREATED)
-        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class OrderDetailAPIView(APIView):
     """
-    API view for retrieving, updating and deleting a specific order.
+    API view for retrieving, updating, and deleting a specific order.
     """
     def get_object(self, order_id):
         try:
@@ -139,7 +130,6 @@ class OrderDetailAPIView(APIView):
         serializer = OrderSerializer(order)
         return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
 
-
     def put(self, request, order_id):
         """
         Updates a specific order by id.
@@ -151,7 +141,6 @@ class OrderDetailAPIView(APIView):
             return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
         return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-
     def delete(self, request, order_id):
         """
         Deletes a specific order by id.
@@ -159,6 +148,7 @@ class OrderDetailAPIView(APIView):
         order = self.get_object(order_id)
         order.delete()
         return JsonResponse({'message': 'Order deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
 
 class CartCheckoutAPIView(APIView):
     """
@@ -175,6 +165,7 @@ class CartCheckoutAPIView(APIView):
 
         if not cart_data:
             return JsonResponse({'errors': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
+        
         order_data = {
             'user': user.id,
             'status': 'Pending',
@@ -193,6 +184,7 @@ class CartCheckoutAPIView(APIView):
             return JsonResponse({'message': 'Order placed successfully', 'order_id': order.id}, status=status.HTTP_201_CREATED)
 
         return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Textile Bale Views
 class TextileBaleListCreateAPIView(APIView):
@@ -217,9 +209,10 @@ class TextileBaleListCreateAPIView(APIView):
             return JsonResponse({'data': serializer.data}, status=status.HTTP_201_CREATED)
         return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class TextileBaleDetailAPIView(APIView):
     """
-    API view for retrieving, updating and deleting a specific textile bale.
+    API view for retrieving, updating, and deleting a specific textile bale.
     """
     def get_object(self, bale_id):
         try:
@@ -234,7 +227,6 @@ class TextileBaleDetailAPIView(APIView):
         bale = self.get_object(bale_id)
         serializer = TextileBaleSerializer(bale)
         return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
-
 
     def put(self, request, bale_id):
         """
@@ -254,6 +246,7 @@ class TextileBaleDetailAPIView(APIView):
         bale = self.get_object(bale_id)
         bale.delete()
         return JsonResponse({'message': 'Textile bale deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
 
 # Sales Report Views
 class SalesReportAPIView(APIView):
@@ -276,7 +269,9 @@ class SalesReportAPIView(APIView):
         end_date = parse_date(data.get('end_date'))
         report_type = data.get('report_type')
 
-        # Fetching sales data
+        if not start_date or not end_date:
+            return {'error': 'Start date and end date are required'}
+
         sales_data = Order.objects.filter(date__range=[start_date, end_date])
 
         if report_type == 'daily':
@@ -290,7 +285,7 @@ class SalesReportAPIView(APIView):
 
         return list(report)
 
-# Product Report Views
+
 class ProductSalesReportAPIView(APIView):
     def get(self, request):
         serializer = ProductSalesReportSerializer(data=request.query_params)
@@ -299,31 +294,17 @@ class ProductSalesReportAPIView(APIView):
             return JsonResponse(data)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def post(self, request):
-        serializer = ProductSalesReportSerializer(data=request.data)
-        if serializer.is_valid():
-            data = self.generate_product_sales_report(serializer.validated_data)
-            return JsonResponse(data, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def generate_product_sales_report(self, data):
-        category = data.get('category')
-        stock = data.get('stock')
-        popularity = data.get('popularity')
+        start_date = parse_date(data.get('start_date'))
+        end_date = parse_date(data.get('end_date'))
 
-        products = Products.objects.all()
-        if category:
-            products = products.filter(category=category)
-        if stock:
-            products = products.filter(stock__gte=stock)
-        if popularity:
-            products = products.order_by('-popularity')
+        if not start_date or not end_date:
+            return {'error': 'Start date and end date are required'}
 
-        report = products.values('name').annotate(total_sales=Sum('order__total_price'))
-        return list(report)
+        sales_data = Order.objects.filter(date__range=[start_date, end_date]).values('product').annotate(total_sales=Sum('total_price'))
+        return list(sales_data)
 
 
-# customer activity report
 class CustomerActivityReportAPIView(APIView):
     def get(self, request):
         serializer = CustomerActivityReportSerializer(data=request.query_params)
@@ -336,12 +317,13 @@ class CustomerActivityReportAPIView(APIView):
         start_date = parse_date(data.get('start_date'))
         end_date = parse_date(data.get('end_date'))
 
-        users = User.objects.filter(date_joined__range=[start_date, end_date])
-        report = users.annotate(num_orders=Count('order')).values('username', 'num_orders')
-        return list(report)
-    
-        
-# Order Report Views   
+        if not start_date or not end_date:
+            return {'error': 'Start date and end date are required'}
+
+        activity_data = Order.objects.filter(date__range=[start_date, end_date]).values('user').annotate(total_orders=Count('id'))
+        return list(activity_data)
+
+
 class OrderStatusReportAPIView(APIView):
     def get(self, request):
         serializer = OrderStatusReportSerializer(data=request.query_params)
@@ -350,21 +332,12 @@ class OrderStatusReportAPIView(APIView):
             return JsonResponse(data)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def post(self, request):
-        serializer = OrderStatusReportSerializer(data=request.data)
-        if serializer.is_valid():
-            data = self.generate_order_status_report(serializer.validated_data)
-            return JsonResponse(data, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def generate_order_status_report(self, data):
-        status_filter = data.get('status')
         start_date = parse_date(data.get('start_date'))
         end_date = parse_date(data.get('end_date'))
 
-        orders = Order.objects.filter(date__range=[start_date, end_date])
-        if status_filter:
-            orders = orders.filter(status=status_filter)
+        if not start_date or not end_date:
+            return {'error': 'Start date and end date are required'}
 
-        report = orders.values('status').annotate(total_orders=Sum('total_price'))
-        return list(report) 
+        status_data = Order.objects.filter(date__range=[start_date, end_date]).values('status').annotate(total_orders=Count('id'))
+        return list(status_data)

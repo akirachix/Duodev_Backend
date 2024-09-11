@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('order_number', models.CharField(max_length=50)),
                 ('status', models.CharField(max_length=50)),
-                ('total_amount', models.DecimalField(decimal_places=2, max_digits=10)),
+                ('total_price', models.DecimalField(decimal_places=2, max_digits=10)),
                 ('date_placed', models.DateField()),
             ],
         ),
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateField()),
-                ('total_amount', models.DecimalField(decimal_places=2, max_digits=10)),
+                ('total_price', models.DecimalField(decimal_places=2, max_digits=10)),
             ],
         ),
         migrations.CreateModel(
