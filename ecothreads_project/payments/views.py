@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 import logging
+from payments.utils import get_access_token
 from payments.models import Payment
 from payments.utils import query_mpesa_payment_status
 from users.models import User
@@ -21,15 +22,9 @@ def process_payment(request):
             data = json.loads(request.body)
             phone_number = data.get('phone_number')
             amount = data.get('amount')
-            user_id = data.get('user_id') 
 
-            if not phone_number or not amount or not user_id:
-                return JsonResponse({'error': 'Phone number, amount, and user ID are required'}, status=400)
-
-            try:
-                user = User.objects.get(id=user_id)  
-            except User.DoesNotExist:
-                return JsonResponse({'error': 'User not found'}, status=404)
+            if not phone_number or not amount:
+                return JsonResponse({'error': 'Phone number and amount required'}, status=400)
 
             shortcode = settings.MPESA_SHORTCODE
             passkey = settings.MPESA_PASSKEY
@@ -46,14 +41,13 @@ def process_payment(request):
                 "PartyA": phone_number,
                 "PartyB": shortcode,
                 "PhoneNumber": phone_number,
-                "CallBackURL": 'https://mydomain.com/path',  
+                "CallBackURL": 'https://mydomain.com/path',  # Update with actual callback URL
                 "AccountReference": "Eco-Threads Hub",
                 "TransactionDesc": "Payment for Eco-Threads Hub"
             }
 
             # Save the initial payment record
             payment = Payment.objects.create(
-                user=user,
                 checkout_request_id='',  # To be updated after successful request
                 amount=amount,
                 phone_number=phone_number,
@@ -83,7 +77,6 @@ def process_payment(request):
     else:
         return JsonResponse({'error': 'Invalid method'}, status=405)
 
-
 # payments/views.py
 @csrf_exempt
 def mpesa_callback(request):
@@ -96,21 +89,22 @@ def mpesa_callback(request):
             result_code = stk_callback.get('ResultCode')
             result_desc = stk_callback.get('ResultDesc')
             checkout_request_id = stk_callback.get('CheckoutRequestID')
-            transaction_id = stk_callback.get('TransactionID')  # Example field if available
+            transaction_id = stk_callback.get('TransactionID')  # Optional, may not be available
 
-            try:
-                payment = Payment.objects.get(checkout_request_id=checkout_request_id)
-                if result_code == "0":  # Payment successful
+            payment = Payment.objects.filter(checkout_request_id=checkout_request_id).first()
+            if payment:
+                if result_code == 0:  # Payment successful
                     payment.status = 'completed'
                     payment.transaction_id = transaction_id
+                    payment.save()
                     logger.info("Payment successful: %s", result_desc)
                     return JsonResponse({'status': 'success', 'message': 'Payment was successful'})
                 else:
                     payment.status = 'failed'
+                    payment.save()
                     logger.error("Payment failed: %s", result_desc)
                     return JsonResponse({'status': 'error', 'message': 'Payment failed'}, status=400)
-                payment.save()
-            except Payment.DoesNotExist:
+            else:
                 logger.error("Payment with CheckoutRequestID %s does not exist", checkout_request_id)
                 return JsonResponse({'status': 'error', 'message': 'Payment record not found'}, status=404)
 
@@ -123,26 +117,10 @@ def mpesa_callback(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
-
-def get_access_token():
-    api_url = mpesa_token
-    headers = {
-        'Authorization': f'Basic {base64.b64encode(f"{settings.MPESA_CONSUMER_KEY}:{settings.MPESA_CONSUMER_SECRET}".encode()).decode()}'
-    }
-    response = requests.get(api_url, headers=headers)
-    json_response = response.json()
-
-    if response.status_code == 200:
-        access_token = json_response['access_token']
-        logger.info(f'Generated Access Token: {access_token}')
-        return access_token
-    else:
-        logger.error(f'Error getting access token: {json_response}')
-        raise Exception('Error getting access token')
-
+@csrf_exempt
 def check_payment_status_view(request):
-    checkout_request_id = request.GET.get('checkout_request_id')  # Get the CheckoutRequestID from the request
-    
+    checkout_request_id = request.GET.get('checkout_request_id')
+
     if not checkout_request_id:
         return JsonResponse({'status': 'error', 'message': 'Missing CheckoutRequestID'}, status=400)
 

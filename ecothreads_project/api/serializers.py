@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from products.models import Products
-*rom users.models import User
+from users.models import User
 from order.models import Order
 from textilebale.models import TextileBale
 from reports.models import SalesReport, Product, Order, Review
