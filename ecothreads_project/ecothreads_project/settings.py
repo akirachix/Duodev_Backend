@@ -12,7 +12,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # company email password
 
-For the full list of settings and their values, see
+"""For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
@@ -46,6 +46,9 @@ MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')
 MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET')
 MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE')
 MPESA_PASSKEY = os.getenv('MPESA_PASSKEY')
+MPESA_ACCESS_TOKEN_LINK = os.getenv('MPESA_ACCESS_TOKEN_LINK') 
+MPESA_LINK = os.getenv('MPESA_LINK')
+
 
 # Application definition
 
@@ -62,18 +65,13 @@ INSTALLED_APPS = [
     'api',  
     'users',
     'products',
-
-    'order',
-    'textilebale',
     'traders',
     'payments',
     'reports',
-
     'textilebale',
     'order',
     'footagent',
     'company',
-   
 
 ]
 

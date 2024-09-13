@@ -134,40 +134,38 @@ class OrderDetailAPIView(APIView):
     """
     API view for retrieving, updating, and deleting a specific order.
     """
-    def get_object(self, order_id):
+    def get_object(self, id):
         try:
-            return Order.objects.get(id=order_id)
+            return Order.objects.get(id=id)
         except Order.DoesNotExist:
             raise Http404
 
-    def get(self, request, order_id):
+    def get(self, request, id):
         """
         Returns a specific order by id.
         """
-        order = self.get_object(order_id)
+        order = self.get_object(id)
         serializer = OrderSerializer(order)
         return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
 
-    def put(self, request, order_id):
+    def put(self, request, id):
         """
         Updates a specific order by id.
         """
-        order = self.get_object(order_id)
+        order = self.get_object(id)
         serializer = OrderSerializer(order, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
         return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, order_id):
+    def delete(self, request, id):
         """
         Deletes a specific order by id.
         """
-        order = self.get_object(order_id)
+        order = self.get_object(id)
         order.delete()
         return JsonResponse({'message': 'Order deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
-
-
 class CartCheckoutAPIView(APIView):
     """
     API view to checkout and create an order from the cart.
@@ -266,97 +264,6 @@ class TextileBaleDetailAPIView(APIView):
         return JsonResponse({'message': 'Textile bale deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 
-# Sales Report Views
-class SalesReportAPIView(APIView):
-    def get(self, request):
-        serializer = SalesReportSerializer(data=request.query_params)
-        if serializer.is_valid():
-            data = self.generate_sales_report(serializer.validated_data)
-            return JsonResponse(data)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def post(self, request):
-        serializer = SalesReportSerializer(data=request.data)
-        if serializer.is_valid():
-            data = self.generate_sales_report(serializer.validated_data)
-            return JsonResponse(data, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def generate_sales_report(self, data):
-        start_date = parse_date(data.get('start_date'))
-        end_date = parse_date(data.get('end_date'))
-        report_type = data.get('report_type')
-
-        if not start_date or not end_date:
-            return {'error': 'Start date and end date are required'}
-
-        sales_data = Order.objects.filter(date__range=[start_date, end_date])
-
-        if report_type == 'daily':
-            report = sales_data.values('date').annotate(total_sales=Sum('total_price'))
-        elif report_type == 'weekly':
-            report = sales_data.extra({'week': "strftime('%Y-%W', date)"}).values('week').annotate(total_sales=Sum('total_price'))
-        elif report_type == 'monthly':
-            report = sales_data.extra({'month': "strftime('%Y-%m', date)"}).values('month').annotate(total_sales=Sum('total_price'))
-        else:
-            report = {'error': 'Invalid report type'}
-
-        return list(report)
-
-
-class ProductSalesReportAPIView(APIView):
-    def get(self, request):
-        serializer = ProductSalesReportSerializer(data=request.query_params)
-        if serializer.is_valid():
-            data = self.generate_product_sales_report(serializer.validated_data)
-            return JsonResponse(data)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def generate_product_sales_report(self, data):
-        start_date = parse_date(data.get('start_date'))
-        end_date = parse_date(data.get('end_date'))
-
-        if not start_date or not end_date:
-            return {'error': 'Start date and end date are required'}
-
-        sales_data = Order.objects.filter(date__range=[start_date, end_date]).values('product').annotate(total_sales=Sum('total_price'))
-        return list(sales_data)
-
-
-class CustomerActivityReportAPIView(APIView):
-    def get(self, request):
-        serializer = CustomerActivityReportSerializer(data=request.query_params)
-        if serializer.is_valid():
-            data = self.generate_customer_activity_report(serializer.validated_data)
-            return JsonResponse(data)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def generate_customer_activity_report(self, data):
-        start_date = parse_date(data.get('start_date'))
-        end_date = parse_date(data.get('end_date'))
-
-        if not start_date or not end_date:
-            return {'error': 'Start date and end date are required'}
-
-        activity_data = Order.objects.filter(date__range=[start_date, end_date]).values('user').annotate(total_orders=Count('id'))
-        return list(activity_data)
-
-
-class OrderStatusReportAPIView(APIView):
-    def get(self, request):
-        serializer = OrderStatusReportSerializer(data=request.query_params)
-        if serializer.is_valid():
-            data = self.generate_order_status_report(serializer.validated_data)
-            return JsonResponse(data)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def generate_order_status_report(self, data):
-        start_date = parse_date(data.get('start_date'))
-        end_date = parse_date(data.get('end_date'))
-
-
-        if not start_date or not end_date:
-            return {'error': 'Start date and end date are required'}
 
 # Textile Bale:
 class TextileBaleListCreateView(generics.ListCreateAPIView):
@@ -384,9 +291,10 @@ class TextileBaleDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TextileBaleSerializer
     lookup_field = 'bale_id'
 
-
-
-
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'message': 'Textile bale deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 # Order table
 class OrderListCreateView(generics.ListCreateAPIView):
@@ -490,34 +398,60 @@ def send_invitation_email(request):
 
     # Prepare the HTML content with the template
     html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <style>
-            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-            .container {{ width: 100%; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e2e2; border-radius: 10px; background-color: #f9f9f9; }}
-            .header {{ text-align: center; margin-bottom: 20px; }}
-            .footer {{ margin-top: 20px; font-size: 12px; color: #888; }}
-            .button {{ display: inline-block; padding: 10px 15px; margin-top: 20px; background-color: #28a745; color: #ffffff; text-decoration: none; border-radius: 5px; }}
-            .logo {{ max-width: 200px;height: auto;}}
-            p {{ color: black; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <img src="https://lh3.googleusercontent.com/a/ACg8ocJngyBoQ9rtDOs1iY84zWb43oA_cX6qzgbDiXQMy5kU4rkYa5E=s96-c-rg-br100" alt="Eco Threads Hub Logo" class="logo"/>
-                <h2>Welcome to Eco Threads Hub! </h2>
+        <html>
+        <head>
+            <style>
+                .container {{
+                    width: 80%;
+                    margin: 0 auto;
+                    padding: 20px;
+                    font-family: Arial, sans-serif;
+                }}
+                .header {{
+                    text-align: center;
+                    background-color: #f7f7f7;
+                    padding: 20px;
+                }}
+                .logo {{
+                    width: 150px;
+                }}
+                .button {{
+                    display: inline-block;
+                    background-color: #4CAF50;
+                    color: white;
+                    padding: 10px 20px;
+                    text-align: center;
+                    text-decoration: none;
+                    font-size: 16px;
+                    border-radius: 5px;
+                }}
+                .footer {{
+                    margin-top: 20px;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #777;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <img class="logo" src="https://lh3.googleusercontent.com/a/ACg8ocJngyBoQ9rtDOs1iY84zWb43oA_cX6qzgbDiXQMy5kU4rkYa5E=s96-c-rg-br100" alt="Eco Threads Hub Logo">
+                    <h1>Welcome to Eco Threads Hub!</h1>
+                </div>
+                <p>Hello,</p>
+                <p>You have been invited to join Eco Threads Hub as a foot agent. We are excited to have you as part of our growing team and look forward to your contributions to sustainability and textile recycling efforts.</p>
+                <p>To get started, please click the button below to complete your registration:</p>
+                <a href="{{registration_link}}" class="button">Complete Registration</a>
+                <p>If you have any questions, feel free to reach out to us.</p>
+                <p>Best regards,<br>The Eco Threads Team</p>
+                <div class="footer">
+                    <p>If you did not expect this invitation, please disregard this email.</p>
+                </div>
             </div>
-            <p>Dear {recipient},</p>
-            <p>{message}</p>
-            <p>We are excited to have you join us. Click the button below to register:</p>
-            <a href="{registration_link}" class="button">Join Now</a>
-            <p>Best regards,<br>Eco Threads Hub</p>
-        </div>
-    </body>
-    </html>
-    """
+        </body>
+        </html>
+        """
 
     # Send the email using the utility function
     try:
