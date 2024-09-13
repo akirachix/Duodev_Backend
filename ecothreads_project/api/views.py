@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count
 from products.models import Products
-from .serializers import ProductsSerializer
+from .serializers import ProductsSerializer,ReviewSerializer
 from rest_framework import generics
 from textilebale.models import TextileBale
 from .serializers import TextileBaleSerializer
@@ -21,6 +21,16 @@ from rest_framework.decorators import api_view
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail, EmailMultiAlternatives
+from reviews.models import Review
+from traders.models import Trader
+from django.db.models.functions import TruncMonth
+from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, login
+from django.views.decorators.csrf import csrf_exempt
+from django.views import View
+from django.utils.decorators import method_decorator
+
 
 
 
@@ -30,10 +40,14 @@ from .serializers import (
     OrderStatusReportSerializer, CustomerActivityReportSerializer,
     OrderSerializer
 )
+import json
 from products.models import Products
 from order.models import Order
 from django.contrib.auth.models import User
 from textilebale.models import TextileBale
+from datetime import timedelta
+from django.utils import timezone
+
 
 # Products Views
 class ProductsListView(APIView):
@@ -59,6 +73,7 @@ class ProductsListView(APIView):
         return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
+#ProductsdetailView
 class ProductsDetailView(APIView):
     """
     API view for retrieving, updating, and deleting products.
@@ -112,10 +127,8 @@ class UserRegistrationView(APIView):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse({'data': serializer.data}, status=status.HTTP_201_CREATED)
-        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-
+            return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 # Order Views
 class OrderListCreateAPIView(APIView):
     def get(self, request):
@@ -148,16 +161,17 @@ class OrderDetailAPIView(APIView):
         serializer = OrderSerializer(order)
         return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
 
+    
     def put(self, request, id):
         """
         Updates a specific order by id.
         """
         order = self.get_object(id)
-        serializer = OrderSerializer(order, data=request.data)
+        serializer = OrderSerializer(order, data=request.data, partial=True)  # Allow partial updates
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
-        return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):
         """
@@ -203,7 +217,7 @@ class CartCheckoutAPIView(APIView):
 
 
 # Textile Bale Views
-class TextileBaleListCreateAPIView(APIView):
+class TextileBaleListView(APIView):
     """
     API view for listing and creating textile bales.
     """
@@ -264,6 +278,79 @@ class TextileBaleDetailAPIView(APIView):
         return JsonResponse({'message': 'Textile bale deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 
+# Sales Report Views
+class TopSoldProductOfWeekAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        # Calculate the start of the week
+        start_of_week = timezone.now() - timedelta(days=7)
+
+        # Query to get the top sold product of the week
+        top_sold_product = Order.objects.filter(
+            order_date__gte=start_of_week
+        ).values('product').annotate(
+            total_quantity=Count('quantity')
+        ).order_by('-total_quantity').first()
+
+        if top_sold_product:
+            # Fetch the product details
+            product = Products.objects.get(pk=top_sold_product['product'])
+            return Response({
+                'product': ProductsSerializer(product).data,
+                'total_sales': top_sold_product['total_quantity']
+            })
+        
+        return Response({'error': 'No data available'}, status=status.HTTP_404_NOT_FOUND)
+
+
+#TRADERS INTERACTIONS
+class TradersInteractedAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        # Query to get the number of interactions per foot agent
+        interactions = AgentAssignment.objects.values('foot_agent').annotate(
+            interaction_count=Count('assignment_id')
+        ).order_by('-interaction_count')
+
+        
+        detailed_interactions = []
+        for interaction in interactions:
+            foot_agent = FootAgent.objects.get(pk=interaction['foot_agent'])
+            detailed_interactions.append({
+                'agent_name': foot_agent.agent_name,
+                'interaction_count': interaction['interaction_count'],
+            })
+
+        return Response(detailed_interactions)
+
+
+
+#Registered Traders
+
+User = get_user_model()
+class SellersAPIView(APIView):
+    def get(self, request):
+        sellers = User.objects.filter(role='seller')  # Fetch sellers
+        return Response({'sellers': [str(seller) for seller in sellers]})
+
+#Totalsales
+class TotalSalesAPIView(APIView):
+    def get(self, request):
+        # Group orders by month and sum total_price for each month
+        sales_by_month = (
+            Order.objects.annotate(month=TruncMonth('order_date'))
+            .values('month')
+            .annotate(total_sales=Sum('total_price'))
+            .order_by('month')
+        )
+
+        # Prepare the data with full month names
+        monthly_sales = [
+            {'month': sale['month'].strftime('%B %Y'), 'total_sales': sale['total_sales']}
+            for sale in sales_by_month
+        ]
+
+        # Return the result as a JSON response
+        return JsonResponse({'monthly_sales': monthly_sales})
+
 
 # Textile Bale:
 class TextileBaleListCreateView(generics.ListCreateAPIView):
@@ -296,6 +383,8 @@ class TextileBaleDetailView(generics.RetrieveUpdateDestroyAPIView):
         self.perform_destroy(instance)
         return Response({'message': 'Textile bale deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
+
+
 # Order table
 class OrderListCreateView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
@@ -308,18 +397,23 @@ class OrderListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(user_id=user_id)
         return queryset
 
+
+
 # Retrieve, update, or delete a specific order
 class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     lookup_field = 'order_id'
 
-# Checkout and create an order from the cart (mock implementation)
+
+
+
+# Checkout and create an order from the cart 
 class CartCheckoutView(generics.CreateAPIView):
     serializer_class = OrderSerializer
 
     def perform_create(self, serializer):
-        # Assuming `cart_data` comes from the request (not implemented here)
+        # Assuming `cart_data` comes from the request 
         cart_data = self.request.data.get('cart', {})
         # Calculate total_price, create an order, etc.
         total_price = sum(item['price'] * item['quantity'] for item in cart_data)
@@ -328,7 +422,13 @@ class CartCheckoutView(generics.CreateAPIView):
 
 
 # footagent and assignment
-
+class FootAgentCreateView(APIView):
+    def post(self, request):
+        serializer = FootAgentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 class FootAgentListCreateView(generics.ListCreateAPIView):
     queryset = FootAgent.objects.all()
     serializer_class = FootAgentSerializer
@@ -336,6 +436,8 @@ class FootAgentListCreateView(generics.ListCreateAPIView):
 class FootAgentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = FootAgent.objects.all()
     serializer_class = FootAgentSerializer
+
+
 
 # Assignment views
 class AgentAssignmentListCreateView(generics.ListCreateAPIView):
@@ -462,3 +564,39 @@ def send_invitation_email(request):
 
         status_data = Order.objects.filter(date__range=[start_date, end_date]).values('status').annotate(total_orders=Count('id'))
         return list(status_data)
+# Review views
+class ReviewListCreateView(generics.ListCreateAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    
+    
+    
+    
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UserLoginView(View):
+    """Handle user login."""
+
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+
+            if not username or not password:
+                return JsonResponse({'error': 'Username and password are required.'}, status=400)
+
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                return JsonResponse({'message': 'Login successful', 'user': user.username})
+            else:
+                return JsonResponse({'error': 'Invalid username or password'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)

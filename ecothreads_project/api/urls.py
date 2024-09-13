@@ -4,10 +4,10 @@ from .views import (
     ProductsListView, ProductsDetailView,
 
     # Textile bale-related views
-    TextileBaleListCreateView, TextileBaleDetailView,
+    TextileBaleListView, TextileBaleDetailView,
 
     # Order-related views
-    OrderListCreateView, OrderDetailAPIView, CartCheckoutView,
+    OrderListCreateAPIView, OrderDetailAPIView, CartCheckoutView,
 
     # Foot Agent-related views
     FootAgentListCreateView, FootAgentDetailView,
@@ -17,29 +17,31 @@ from .views import (
     CompanySignUpView, CompanySignInView,
 
     # Other reports/views
-    UserRegistrationView, SalesReportAPIView, ProductSalesReportAPIView, 
-    CustomerActivityReportAPIView, OrderStatusReportAPIView, send_invitation_email
+    UserRegistrationView,  TopSoldProductOfWeekAPIView,
+    TradersInteractedAPIView,SellersAPIView,
+    TotalSalesAPIView, send_invitation_email, UserLoginView
 )
 
 urlpatterns = [
     # Product-related URLs
-    path('products/', ProductsListView.as_view(), name='product_list'),
-    path('products/<int:pk>/', ProductsDetailView.as_view(), name='product_detail'),
+    path('products/', ProductsListView.as_view(), name='products-list'),
+    path('products/<int:pk>/', ProductsDetailView.as_view(), name='products-detail'),
+    
 
     # Textile bale-related URLs
-    path('textilebale/', TextileBaleListCreateView.as_view(), name='textilebale-list-create'),
+    path('textilebales/', TextileBaleListView.as_view(), name='textilebale-list'),
     path('textilebale/<int:bale_id>/', TextileBaleDetailView.as_view(), name='textilebale-detail'),
 
     # Order-related URLs
-    path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
+    path('orders/', OrderListCreateAPIView.as_view(), name='order-list-create'),
     path('orders/<int:id>/', OrderDetailAPIView.as_view(), name='order-detail'),
     path('cart/checkout/', CartCheckoutView.as_view(), name='cart-checkout'),
 
     # Foot Agent-related URLs
-    path('footagents/', FootAgentListCreateView.as_view(), name='footagent-list-create'),
-    path('footagents/<int:agent_id>/', FootAgentDetailView.as_view(), name='footagent-detail'),
-    path('footagents/assignments/', AgentAssignmentListCreateView.as_view(), name='assignment-list-create'),
-    path('footagents/assignments/<int:assignment_id>/', AgentAssignmentDetailView.as_view(), name='assignment-detail'),
+    path('footagents/', FootAgentListCreateView.as_view(), name='footagent-list'),
+    path('footagents/<int:pk>/', FootAgentDetailView.as_view(), name='footagent-detail'),
+    path('agent-assignments/', AgentAssignmentListCreateView.as_view(), name='agentassignment-list-create'),
+    path('agent-assignments/<int:pk>/', AgentAssignmentDetailView.as_view(), name='agentassignment-detail'),
 
     # Company-related URLs
     path('company/signup/', CompanySignUpView.as_view(), name='company_signup'),
@@ -47,11 +49,14 @@ urlpatterns = [
 
     # User registration and reports
     path('register/', UserRegistrationView.as_view(), name='user-register'),
-    path('salesreport/', SalesReportAPIView.as_view(), name='sales-report'),
-    path('productsalesreport/', ProductSalesReportAPIView.as_view(), name='product-sales-report'),
-    path('customeractivityreport/', CustomerActivityReportAPIView.as_view(), name='customer-activity-report'),
-    path('orderstatusreport/', OrderStatusReportAPIView.as_view(), name='order-status-report'),
+    path('top-sold-product-of-week/', TopSoldProductOfWeekAPIView.as_view(), name='top-sold-product-of-week'),
+    path('traders-interacted/', TradersInteractedAPIView.as_view(), name='traders-interacted'),
+    path('sellers/', SellersAPIView.as_view(), name='sellers'),
+    path('total-sales/', TotalSalesAPIView.as_view(), name='total-sales'),
 
     # Invitation
     path('send-invitation/', send_invitation_email, name='send_invitation'),
+    
+    #Login
+    path('login/', UserLoginView.as_view(), name='login'),   
 ]
