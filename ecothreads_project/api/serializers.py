@@ -10,7 +10,6 @@ from footagent.models import FootAgent
 from footagent.models import AgentAssignment
 from company.models import Company
 from django.contrib.auth.hashers import make_password, check_password
-
 class ProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
@@ -30,6 +29,12 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
 #Serializer for TextileBale
 
+class OrderCreateView(serializers.ModelSerializer):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    
+    
+    
 class TextileBaleSerializer(serializers.ModelSerializer):
     class Meta:
         model = TextileBale
@@ -76,7 +81,11 @@ class OrderSerializer(serializers.ModelSerializer):
 class FootAgentSerializer(serializers.ModelSerializer):
     class Meta:
         model = FootAgent
-        fields = '__all__'
+        fields = ['agent_id', 'user', 'agent_name', 'location']
+        extra_kwargs = {
+            'user': {'required': True},
+            'agent_name': {'required': True},
+        }
 
 class AgentAssignmentSerializer(serializers.ModelSerializer):
     foot_agent = FootAgentSerializer(read_only=True)
@@ -120,4 +129,38 @@ class CompanySignInSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid email or password.")
         
         return data
+    
+#Serializer for Review
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = '__all__'
+        
+        
+#Serializer for Trader
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+        
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'password', 'first_name', 'last_name', 'phone_number', 'registration_date', 'role']
+    
+    def create(self, validated_data):
+        # Use the create_user method to handle password hashing
+        return User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            phone_number=validated_data.get('phone_number', ''),
+            registration_date=validated_data.get('registration_date', None),
+            role=validated_data.get('role', 'public'),
+        )        

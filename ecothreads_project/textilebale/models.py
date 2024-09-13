@@ -12,8 +12,9 @@ class TextileBale(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     upload_date = models.DateTimeField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)
-    posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='textile_bales_posted', default=1)  # Change the default value to a valid user ID
-
+    posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='textile_bales_posted', default=1)
+    image = models.ImageField(upload_to='textile_bales/', blank=True, null=True)  
+    
     class Meta:
         permissions = [
             ("post_textilebale_custom", "Can post textile bale"),
