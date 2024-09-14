@@ -198,3 +198,7 @@ AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
 REDIRECT_URI = "http://localhost:8080/callback/"
 
 REDIRECT_URI = "http://localhost:8080/auth/"
+
+# Heroku settings.
+import django_heroku
+django_heroku.settings(locals())

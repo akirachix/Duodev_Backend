@@ -2,4 +2,6 @@ authlib ~= 1.0
 django ~= 4.0
 python-dotenv ~= 0.19
 requests ~= 2.27
-python-dotenv
+python-dotenv==0.21.1
+gunicorn==23.0.0
+whitenoise==6.7.0

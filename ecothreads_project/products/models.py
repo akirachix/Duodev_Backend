@@ -8,6 +8,7 @@ class Products(models.Model):
     stock_quantity = models.IntegerField()
     material = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='products/', blank=True, null=True)  
     trader = models.ForeignKey('traders.Trader', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
