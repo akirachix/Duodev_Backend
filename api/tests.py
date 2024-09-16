@@ -149,7 +149,7 @@ class UserAuthenticationTests(TestCase):
             username=self.username,
             password=self.password
         )
-        self.login_url = '/api/token/'  # Replace with your actual token endpoint
+        self.login_url = '/api/token/' 
 
     def test_token_creation_on_login(self):
         data = {'username': self.username, 'password': self.password}
