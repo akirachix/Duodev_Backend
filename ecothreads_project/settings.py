@@ -1,5 +1,6 @@
 import os
 
+import dj_database_url
 
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 
@@ -128,14 +129,20 @@ WSGI_APPLICATION = 'ecothreads_project.wsgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv('DB_NAME'),
-        "USER": os.getenv('DB_USER'),
-        "PASSWORD": os.getenv('DB_PASSWORD'),
-        "HOST": os.getenv('DB_HOST'),
-        "PORT": os.getenv('DB_PORT'),
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "mydatabase",
     }
 }
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv('DB_NAME'),
+#         "USER": os.getenv('DB_USER'),
+#         "PASSWORD": os.getenv('DB_PASSWORD'),
+#         "HOST": os.getenv('DB_HOST'),
+#         "PORT": os.getenv('DB_PORT'),
+#     }
+# }
 
 
 # Password validation
