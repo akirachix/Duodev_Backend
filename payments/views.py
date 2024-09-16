@@ -41,7 +41,7 @@ def process_payment(request):
                 "PartyA": phone_number,
                 "PartyB": shortcode,
                 "PhoneNumber": phone_number,
-                "CallBackURL": 'https://mydomain.com/path',  # Update with actual callback URL
+                "CallBackURL": 'https://mydomain.com/path',  
                 "AccountReference": "Eco-Threads Hub",
                 "TransactionDesc": "Payment for Eco-Threads Hub"
             }
