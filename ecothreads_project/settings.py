@@ -49,7 +49,7 @@ MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE', '')
 MPESA_PASSKEY = os.getenv('MPESA_PASSKEY', '')
 MPESA_ACCESS_TOKEN_LINK = os.getenv('MPESA_ACCESS_TOKEN_LINK', '') 
 MPESA_LINK = os.getenv('MPESA_LINK', '')
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Application definition
 
