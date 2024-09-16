@@ -16,6 +16,38 @@ def get_access_token():
     credentials = f"{consumer_key}:{consumer_secret}"
     encoded_credentials = base64.b64encode(credentials.encode()).decode()
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     headers = {
         'Authorization': f'Basic {encoded_credentials}'
     }

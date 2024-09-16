@@ -42,11 +42,11 @@ AUTH_USER_MODEL = 'users.User'
 
 ALLOWED_HOSTS = []
 
-MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')
-MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET')
-MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE')
-MPESA_PASSKEY = os.getenv('MPESA_PASSKEY')
-MPESA_ACCESS_TOKEN_LINK = os.getenv('MPESA_ACCESS_TOKEN_LINK') 
+MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY', '')
+MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET', '')
+MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE', '')
+MPESA_PASSKEY = os.getenv('MPESA_PASSKEY', '')
+MPESA_ACCESS_TOKEN_LINK = os.getenv('MPESA_ACCESS_TOKEN_LINK', '') 
 MPESA_LINK = os.getenv('MPESA_LINK')
 
 
@@ -99,6 +99,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'ecothreads_project.urls'
@@ -190,11 +191,12 @@ ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
-AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
-AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
-AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
+AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN", '')
+AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID", '')
+AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET", '')
 
 
-REDIRECT_URI = "http://localhost:8080/callback/"
+REDIRECT_URI =  os.getenv('CALLBACK_URL', '')
 
-REDIRECT_URI = "http://localhost:8080/auth/"
+REDIRECT_URI = os.getenv('REDIRECT_AUTH', '') 
+
