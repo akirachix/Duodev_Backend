@@ -5,3 +5,4 @@ requests ~= 2.27
 python-dotenv==0.21.1
 gunicorn==23.0.0
 whitenoise==6.7.0
+djangorestframework==3.15.2
