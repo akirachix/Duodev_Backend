@@ -2,7 +2,7 @@ import os
 
 import dj_database_url
 
-SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
 
 # settings.py    -- email invitation from company
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -10,8 +10,8 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # company email password
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # company email password
 
 """For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
@@ -32,7 +32,7 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, "My App", "templates")
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', '')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -48,7 +48,7 @@ MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET', '')
 MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE', '')
 MPESA_PASSKEY = os.getenv('MPESA_PASSKEY', '')
 MPESA_ACCESS_TOKEN_LINK = os.getenv('MPESA_ACCESS_TOKEN_LINK', '') 
-MPESA_LINK = os.getenv('MPESA_LINK')
+MPESA_LINK = os.getenv('MPESA_LINK', '')
 
 
 # Application definition
@@ -131,11 +131,11 @@ WSGI_APPLICATION = 'ecothreads_project.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL')
+        default=os.getenv('DATABASE_URL', '')
     )
 }
 # Fallback for local development and test environments
-if not os.getenv('DATABASE_URL'):
+if not os.getenv('DATABASE_URL', ''):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
