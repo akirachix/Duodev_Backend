@@ -99,6 +99,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'ecothreads_project.urls'
@@ -199,6 +200,3 @@ REDIRECT_URI = "http://localhost:8080/callback/"
 
 REDIRECT_URI = "http://localhost:8080/auth/"
 
-# Heroku settings.
-import django_heroku
-django_heroku.settings(locals())
