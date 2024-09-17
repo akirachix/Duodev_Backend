@@ -14,7 +14,7 @@ jobs:
       - name: Set up Python environment
         uses: actions/setup-python@v2
         with:
-          python-version: 3.10
+          python-version: 3.11
 
       - name: Install dependencies
         run: |
@@ -24,12 +24,6 @@ jobs:
         run: |
           git remote -v
           git remote add heroku https://git.heroku.com/eco-threads-hub.git || echo "Heroku remote already exists"
-
-      - name: Set Heroku buildpack
-        run: |
-          heroku buildpacks:set heroku/python -a eco-threads-hub
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
       - name: Deploy to Heroku
         uses: akhileshns/heroku-deploy@v3.13.15

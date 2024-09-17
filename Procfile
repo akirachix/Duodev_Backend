@@ -1,1 +1,1 @@
-web: gunicorn ecothreads.wsgi --log-file -
+web: gunicorn ecothreads_project.wsgi --log-file -
