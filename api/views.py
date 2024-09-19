@@ -593,7 +593,7 @@ class UserLoginView(View):
             user = authenticate(request, username=username, password=password)
 
             if user is not None:
-                return JsonResponse({'message': 'Login successful', 'user': user.username})
+                return JsonResponse({'message': 'Login successful', 'user': user.username, 'role': user.role})
             else:
                 return JsonResponse({'error': 'Invalid username or password'}, status=400)
         except json.JSONDecodeError:
