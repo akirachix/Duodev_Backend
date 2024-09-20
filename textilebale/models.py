@@ -1,12 +1,12 @@
 from django.conf import settings
 from django.db import models
-from traders.models import Trader
+from users.models import User
 
 class TextileBale(models.Model):
     """Model to represent textile bales."""
     
     bale_id = models.AutoField(primary_key=True)
-    trader = models.ForeignKey(Trader, on_delete=models.CASCADE, related_name='textile_bales', null=True, blank=True) 
+    trader = models.ForeignKey(User, on_delete=models.CASCADE, related_name='textile_bales', null=True, blank=True) 
     waste_type = models.CharField(max_length=255)
     weight = models.IntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
