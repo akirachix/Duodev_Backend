@@ -593,10 +593,17 @@ class UserLoginView(View):
             user = authenticate(request, username=username, password=password)
 
             if user is not None:
-                return JsonResponse({'message': 'Login successful', 'user': user.username})
+                return JsonResponse({'message': 'Login successful', 'user': user.username, 'role': user.role})
             else:
                 return JsonResponse({'error': 'Invalid username or password'}, status=400)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON format'}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+        
+class UserListView(APIView):
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)        
+        
