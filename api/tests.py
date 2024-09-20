@@ -43,7 +43,6 @@ class ProductsListViewTests(TestCase):
         self.product = Products.objects.create(
             product_name='Test Product',
             price=19.99,
-            stock_quantity=100,
             material='Cotton',
             description='A high-quality cotton product.',
             trader=None  # Assuming trader can be None
@@ -187,7 +186,7 @@ class OrderTests(APITestCase):
         self.product = Products.objects.create(
             product_name='Sample Product',
             price=100.0,
-            stock_quantity=10,
+
             material='Cotton',
             description='A sample product description.'
         )
@@ -295,14 +294,12 @@ class SalesReportTests(APITestCase):
         self.product1 = Products.objects.create(
             product_name='Product 1',
             price=100.00,
-            stock_quantity=10,
             material='Cotton',
             description='A high-quality cotton product'
         )
         self.product2 = Products.objects.create(
             product_name='Product 2',
             price=150.00,
-            stock_quantity=5,
             material='Wool',
             description='A premium wool product'
         )
@@ -363,7 +360,6 @@ class ProductsTests(TestCase):
         self.product1 = Products.objects.create(
             product_name='Product 1',
             price=100.00,
-            stock_quantity=10,
             material='Cotton',
             description='A high-quality cotton product',
             trader=self.trader
@@ -371,7 +367,6 @@ class ProductsTests(TestCase):
         self.product2 = Products.objects.create(
             product_name='Product 2',
             price=150.00,
-            stock_quantity=5,
             material='Wool',
             description='A premium wool product'
         )

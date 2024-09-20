@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'footagent',
     'company',
     'reviews',
+    'drf_yasg',
 
 ]
 
