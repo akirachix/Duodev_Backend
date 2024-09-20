@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from payments.views import process_payment, mpesa_callback, check_payment_status_view
 from api import views
+from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
