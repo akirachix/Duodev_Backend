@@ -23,7 +23,8 @@ from .views import (
     # Other reports/views
     UserRegistrationView,  TopSoldProductOfWeekAPIView,
     TradersInteractedAPIView,SellersAPIView,
-    TotalSalesAPIView, send_invitation_email, UserLoginView
+    TotalSalesAPIView, send_invitation_email, UserLoginView,
+    UserListView
 )
 
 
@@ -41,6 +42,8 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    
+    path('users/', UserListView.as_view(), name='user-list'),
     # Product-related URLs
     path('products/', ProductsListView.as_view(), name='products-list'),
     path('products/<int:pk>/', ProductsDetailView.as_view(), name='products-detail'),
