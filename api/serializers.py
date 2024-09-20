@@ -10,6 +10,12 @@ from footagent.models import FootAgent
 from footagent.models import AgentAssignment
 from company.models import Company
 from django.contrib.auth.hashers import make_password, check_password
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+        
 class ProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
@@ -81,7 +87,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class FootAgentSerializer(serializers.ModelSerializer):
     class Meta:
         model = FootAgent
-        fields = ['agent_id', 'user', 'agent_name', 'location']
+        fields = '__all__'
         extra_kwargs = {
             'user': {'required': True},
             'agent_name': {'required': True},
@@ -103,8 +109,7 @@ class CompanySignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['company_name', 'company_email', 'password', 'confirm_password']
-
+        fields = '__all__'
     def validate(self, data):
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError("Passwords do not match.")
@@ -151,7 +156,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'first_name', 'last_name', 'phone_number', 'registration_date', 'role']
+        fields = '__all__'
     
     def create(self, validated_data):
         # Use the create_user method to handle password hashing

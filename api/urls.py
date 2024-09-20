@@ -1,4 +1,8 @@
 from django.urls import path
+from rest_framework import permissions
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 from .views import (
     # Product-related views
     ProductsListView, ProductsDetailView,
@@ -19,10 +23,27 @@ from .views import (
     # Other reports/views
     UserRegistrationView,  TopSoldProductOfWeekAPIView,
     TradersInteractedAPIView,SellersAPIView,
-    TotalSalesAPIView, send_invitation_email, UserLoginView
+    TotalSalesAPIView, send_invitation_email, UserLoginView,
+    UserListView
+)
+
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="DuoDev API",
+        default_version='v1',
+        description="API documentation for the Ecothreadsproject",
+        terms_of_service="https://eco-threads-hub-d1b29486e648.herokuapp.com/",
+        contact=openapi.Contact(email="ecothreadshub2024@gmail.com"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns = [
+    
+    path('users/', UserListView.as_view(), name='user-list'),
     # Product-related URLs
     path('products/', ProductsListView.as_view(), name='products-list'),
     path('products/<int:pk>/', ProductsDetailView.as_view(), name='products-detail'),
@@ -30,7 +51,7 @@ urlpatterns = [
 
     # Textile bale-related URLs
     path('textilebales/', TextileBaleListView.as_view(), name='textilebale-list'),
-    path('textilebale/<int:bale_id>/', TextileBaleDetailView.as_view(), name='textilebale-detail'),
+    path('textilebales/<int:bale_id>/', TextileBaleDetailView.as_view(), name='textilebale-detail'),
 
     # Order-related URLs
     path('orders/', OrderListCreateAPIView.as_view(), name='order-list-create'),
@@ -58,5 +79,10 @@ urlpatterns = [
     path('send-invitation/', send_invitation_email, name='send_invitation'),
     
     #Login
-    path('login/', UserLoginView.as_view(), name='login'),   
+    path('login/', UserLoginView.as_view(), name='login'),  
+    
+    # Urls for Swagger documentation
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
 ]

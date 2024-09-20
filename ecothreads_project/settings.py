@@ -41,7 +41,7 @@ DEBUG = True
 AUTH_USER_MODEL = 'users.User'
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY', '')
 MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET', '')
@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'footagent',
     'company',
     'reviews',
+    'drf_yasg',
 
 ]
 
