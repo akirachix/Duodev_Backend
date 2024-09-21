@@ -581,26 +581,42 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
 class UserLoginView(View):
     """Handle user login."""
 
-    def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body)
-            username = data.get('username')
-            password = data.get('password')
+    from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.contrib.auth import authenticate
+import json
 
-            if not username or not password:
-                return JsonResponse({'error': 'Username and password are required.'}, status=400)
+def post(self, request, *args, **kwargs):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username')
+        password = data.get('password')
 
-            user = authenticate(request, username=username, password=password)
+        if not username or not password:
+            return JsonResponse({'error': 'Username and password are required.'}, status=400)
 
-            if user is not None:
-                return JsonResponse({'message': 'Login successful', 'user': user.username, 'role': user.role})
-            else:
-                return JsonResponse({'error': 'Invalid username or password'}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-        
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            # Serialize user data
+            user_data = {
+                'user_id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'is_active': user.is_active,
+                'is_staff': user.is_staff,
+                'last_login': user.last_login,
+                # Add any other fields you want to include
+            }
+            return JsonResponse({'message': 'Login successful', 'user': user_data})
+        else:
+            return JsonResponse({'error': 'Invalid username or password'}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 class UserListView(APIView):
     def get(self, request):
         users = User.objects.all()
