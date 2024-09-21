@@ -498,7 +498,7 @@ def send_invitation_email(request):
     except ValidationError:
         return Response({'error': 'Invalid email address format.'}, status=400)
 
-    # Prepare the HTML content with the template
+    # Prepare the HTML template
     html_content = f"""
         <html>
         <head>
