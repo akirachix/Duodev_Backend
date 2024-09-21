@@ -108,8 +108,8 @@ class ProductsDetailView(APIView):
     Deletes a product by id.
     """
     product = self.get_object(id)
-    if not product:
-        return JsonResponse({'errors': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+        if not product:
+            return JsonResponse({'errors': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
     
 
 # User Registration View
