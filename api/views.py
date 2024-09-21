@@ -103,17 +103,14 @@ class ProductsDetailView(APIView):
             return JsonResponse({'data': serializer.data}, status=status.HTTP_200_OK)
         return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk):
-        """
-        Deletes a product by id.
-        """
-        try:
-            product = Products.objects.get(pk=pk)
-        except Products.DoesNotExist:
-            return JsonResponse({'errors': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
-        product.delete()
-        return JsonResponse({'message': 'Product deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
-
+    def delete(self, request, id):
+    """
+    Deletes a product by id.
+    """
+    product = self.get_object(id)
+    if not product:
+        return JsonResponse({'errors': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+    
 
 # User Registration View
 class UserRegistrationView(APIView):
