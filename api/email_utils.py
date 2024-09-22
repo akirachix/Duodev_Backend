@@ -8,7 +8,11 @@ def send_invite_email(to_email, subject, message):
     send_mail(
         subject,
         message,
-        settings.EMAIL_HOST_USER,  # Sender's email
-        [to_email],  # List of recipients
+        settings.EMAIL_HOST_USER,
+        [to_email], 
         fail_silently=False,
     )
+
+
+
+
