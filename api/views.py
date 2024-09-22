@@ -104,12 +104,12 @@ class ProductsDetailView(APIView):
         return JsonResponse({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):
-    """
-    Deletes a product by id.
-    """
-    product = self.get_object(id)
-    if not product:
-        return JsonResponse({'errors': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+        """
+        Deletes a product by id.
+        """
+        product = self.get_object(id)
+        if not product:
+            return JsonResponse({'errors': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
     
 
 # User Registration View
