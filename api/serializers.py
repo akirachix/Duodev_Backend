@@ -88,10 +88,7 @@ class FootAgentSerializer(serializers.ModelSerializer):
     class Meta:
         model = FootAgent
         fields = '__all__'
-        extra_kwargs = {
-            'user': {'required': True},
-            'agent_name': {'required': True},
-        }
+
 
 class AgentAssignmentSerializer(serializers.ModelSerializer):
     foot_agent = FootAgentSerializer(read_only=True)
