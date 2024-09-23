@@ -88,17 +88,19 @@ class FootAgentSerializer(serializers.ModelSerializer):
     class Meta:
         model = FootAgent
         fields = '__all__'
-        extra_kwargs = {
-            'user': {'required': True},
-            'agent_name': {'required': True},
-        }
 
 class AgentAssignmentSerializer(serializers.ModelSerializer):
-    foot_agent = FootAgentSerializer(read_only=True)
-    
+    foot_agent = FootAgentSerializer(read_only=True)  # Display foot agent details
+    foot_agent_id = serializers.PrimaryKeyRelatedField(queryset=FootAgent.objects.all(), source='foot_agent', write_only=True)  # To accept foot_agent_id as input
+
+    textile_bale = TextileBaleSerializer(read_only=True)  # Display all textile bale details
+    textile_bale_id = serializers.PrimaryKeyRelatedField(queryset=TextileBale.objects.all(), source='textile_bale', write_only=True)  # Accept bale_id as input
+
     class Meta:
         model = AgentAssignment
-        fields = '__all__'
+        fields = '__all__'  # Includes foot_agent, textile_bale, and IDs for input
+
+
 
 
 
