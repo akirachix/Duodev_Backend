@@ -570,50 +570,37 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     
-    
-    
-    
+class UserLoginView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
 
-@method_decorator(csrf_exempt, name='dispatch')
-class UserLoginView(View):
-    """Handle user login."""
+            if not username or not password:
+                return Response({'error': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.contrib.auth import authenticate
-import json
+            user = authenticate(request, username=username, password=password)
 
-def post(self, request, *args, **kwargs):
-    try:
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-
-        if not username or not password:
-            return JsonResponse({'error': 'Username and password are required.'}, status=400)
-
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            # Serialize user data
-            user_data = {
-                'user_id': user.id,
-                'username': user.username,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'email': user.email,
-                'is_active': user.is_active,
-                'is_staff': user.is_staff,
-                'last_login': user.last_login,
-                # Add any other fields you want to include
-            }
-            return JsonResponse({'message': 'Login successful', 'user': user_data})
-        else:
-            return JsonResponse({'error': 'Invalid username or password'}, status=400)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON format'}, status=400)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+            if user is not None:
+                user_data = {
+                    'user_id': user.user_id,
+                    'username': user.username,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'phone_number': user.phone_number,
+                    'role': user.role,
+                    'is_active': user.is_active,
+                    'is_staff': user.is_staff,
+                    'last_login': user.last_login,
+                }
+                return Response({'message': 'Login successful', 'user': user_data}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid username or password'}, status=status.HTTP_400_BAD_REQUEST)
+        except json.JSONDecodeError:
+            return Response({'error': 'Invalid JSON format'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 class UserListView(APIView):
     def get(self, request):
         users = User.objects.all()
