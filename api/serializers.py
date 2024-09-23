@@ -89,13 +89,14 @@ class FootAgentSerializer(serializers.ModelSerializer):
         model = FootAgent
         fields = '__all__'
 
-
 class AgentAssignmentSerializer(serializers.ModelSerializer):
-    foot_agent = FootAgentSerializer(read_only=True)
-    
+    foot_agent = FootAgentSerializer(read_only=True) 
+    foot_agent_id = serializers.PrimaryKeyRelatedField(queryset=FootAgent.objects.all(), source='foot_agent', write_only=True)  # To accept foot_agent_id as input
+
     class Meta:
         model = AgentAssignment
-        fields = '__all__'
+        fields = '__all__'  
+
 
 
 
